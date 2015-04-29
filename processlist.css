@@ -3,5 +3,9 @@
     margin: 0;
 }
 .process-list .blackdg{
-    height: 100%;
+    position: absolute;
+    left: 20px;
+    top: 20px;
+    right: 20px;
+    bottom: 20px;
 }
