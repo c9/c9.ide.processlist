@@ -20,6 +20,8 @@ define(function(require, exports, module) {
         var Tree = require("ace_tree/tree");
         var TreeData = require("ace_tree/data_provider");
         
+        var async = require("async");
+        
         /***** Initialization *****/
         
         var plugin = new Dialog("Ajax.org", main.consumes, {
@@ -154,7 +156,7 @@ define(function(require, exports, module) {
         /***** Methods *****/
         
         function updateProcessList(){
-            var sel = datagrid.selection.getCursor();
+            var sel = datagrid.selection.getSelectedNodes();
             
             proc.execFile("ps", { args: ["auxc"] }, function(err, stdout, stderr){
                 if (err) return;
@@ -170,7 +172,7 @@ define(function(require, exports, module) {
                         ptime: item[9],
                         pid: item[1],
                         user: item[0]
-                    }
+                    };
                 });
                 
                 model.cachedRoot = json;
@@ -179,15 +181,15 @@ define(function(require, exports, module) {
                 if (model.keyword)
                     applyFilter();
                 
-                var node;
                 if (sel) {
-                    json.some(function(item){
-                        if (item.pid == sel.pid) {
-                            node = item;
-                            return true;
-                        }
+                    var nodes = [];
+                    var pids = sel.map(function(n){ return n.pid });
+                    
+                    model.root.items.forEach(function(item){
+                        if (pids.indexOf(item.pid) > -1)
+                            nodes.push(item);
                     });
-                    datagrid.selection.selectNode(node);
+                    datagrid.selection.setSelection(nodes);
                 }
             });
         }
@@ -197,24 +199,26 @@ define(function(require, exports, module) {
         }
         
         function kill(force){
-            var row = datagrid.selection.getCursor();
-            if (!row) return;
+            var nodes = datagrid.selection.getSelectedNodes();
+            if (!nodes.length) return;
             
             var button = force ? btnForceKill : btnKill;
             
-            button.disable();
-            
-            var args = [];
-            if (force) args.push("-9")
-            args.push(row.pid);
-            
-            proc.execFile("kill", { args: args }, function(err, stdout, stderr){
+            async.each(nodes, function(row, next){
+                button.disable();
+                
+                var args = [];
+                if (force) args.push("-9")
+                args.push(row.pid);
+                
+                proc.execFile("kill", { args: args }, function(err, stdout, stderr){
+                    next(err);
+                });
+            }, function(err){
                 button.enable();
-                
-                if (err) return;
-                
-                updateProcessList();
-            });
+                if (!err) updateProcessList();
+            })
+            
         }
         
         function applyFilter(){
