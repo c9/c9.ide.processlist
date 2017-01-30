@@ -36,7 +36,7 @@ define(function(require, exports, module) {
             modal: true,
             custom: true,
             elements: [
-                { type: "textbox", id: "tbFilter", message: "Filter", width: 200, realtime: true},
+                { type: "textbox", id: "tbFilter", message: "Filter", width: 200, realtime: true },
                 { type: "filler" },
                 { type: "button", id: "btnKill", caption: "Kill", onclick: kill, disabled: true },
                 { type: "button", id: "btnForceKill", color: "red", caption: "Force Kill", onclick: forceKill, disabled: true }
@@ -112,10 +112,10 @@ define(function(require, exports, module) {
             
             var datagridDiv = pNode.appendChild(document.createElement("div"));
             datagrid = new Tree(datagridDiv);
-            datagrid.renderer.setTheme({cssClass: "blackdg"});
+            datagrid.renderer.setTheme({ cssClass: "blackdg" });
             // datagrid.setOption("maxLines", 200);
             
-            layout.on("eachTheme", function(e){
+            layout.on("eachTheme", function(e) {
                 var height = parseInt(ui.getStyleRule(".blackdg .row", "height"), 10) || 24;
                 model.rowHeightInner = height;
                 model.rowHeight = height;
@@ -125,7 +125,7 @@ define(function(require, exports, module) {
             
             datagrid.setDataProvider(model);
             
-            layout.on("resize", function(){ datagrid.resize() }, plugin);
+            layout.on("resize", function() { datagrid.resize(); }, plugin);
             
             datagrid.on("changeSelection", function(e) {
                 var row = datagrid.selection.getCursor();
@@ -155,14 +155,14 @@ define(function(require, exports, module) {
         
         /***** Methods *****/
         
-        function updateProcessList(){
+        function updateProcessList() {
             var sel = datagrid.selection.getSelectedNodes();
             
-            proc.execFile("ps", { args: ["auxc"] }, function(err, stdout, stderr){
+            proc.execFile("ps", { args: ["auxc"]}, function(err, stdout, stderr) {
                 if (err) return;
                 
                 var lines = stdout.substr(0, stdout.length - 1).split("\n"); lines.shift();
-                var json = lines.map(function(line){
+                var json = lines.map(function(line) {
                     var item = line.split(/\s+/);
                     var name = item.splice(10).join(" ");
                     return {
@@ -183,9 +183,9 @@ define(function(require, exports, module) {
                 
                 if (sel) {
                     var nodes = [];
-                    var pids = sel.map(function(n){ return n.pid });
+                    var pids = sel.map(function(n) { return n.pid; });
                     
-                    model.root.items.forEach(function(item){
+                    model.root.items.forEach(function(item) {
                         if (pids.indexOf(item.pid) > -1)
                             nodes.push(item);
                     });
@@ -194,34 +194,34 @@ define(function(require, exports, module) {
             });
         }
         
-        function forceKill(){
+        function forceKill() {
             kill(true);
         }
         
-        function kill(force){
+        function kill(force) {
             var nodes = datagrid.selection.getSelectedNodes();
             if (!nodes.length) return;
             
             var button = force ? btnForceKill : btnKill;
             
-            async.each(nodes, function(row, next){
+            async.each(nodes, function(row, next) {
                 button.disable();
                 
                 var args = [];
-                if (force) args.push("-9")
+                if (force) args.push("-9");
                 args.push(row.pid);
                 
-                proc.execFile("kill", { args: args }, function(err, stdout, stderr){
+                proc.execFile("kill", { args: args }, function(err, stdout, stderr) {
                     next(err);
                 });
-            }, function(err){
+            }, function(err) {
                 button.enable();
                 if (!err) updateProcessList();
-            })
+            });
             
         }
         
-        function applyFilter(){
+        function applyFilter() {
             model.keyword = tbFilter.getValue();
             if (!model.keyword) {
                 model.reKeyword = null;
@@ -239,7 +239,7 @@ define(function(require, exports, module) {
             if (!options)
                 options = {};
             
-            return plugin.queue(function(){
+            return plugin.queue(function() {
                 // if (reset || current == -1) {
                 //     path = [startPage];
                 //     current = 0;
@@ -251,12 +251,12 @@ define(function(require, exports, module) {
         
         /***** Lifecycle *****/
         
-        plugin.on("show", function(){
-            timer = setInterval(function(){
+        plugin.on("show", function() {
+            timer = setInterval(function() {
                 updateProcessList();
-            }, INTERVAL)
+            }, INTERVAL);
         });
-        plugin.on("hide", function(){
+        plugin.on("hide", function() {
             clearInterval(timer);
         });
         plugin.on("draw", function(options) {
